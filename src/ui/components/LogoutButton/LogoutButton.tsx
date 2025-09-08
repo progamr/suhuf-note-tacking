@@ -1,11 +1,11 @@
 'use client';
 
 import { Button } from '../Button/Button';
-import { handleSignOut } from '../../../modules/auth/actions';
+import { signOutUser } from '../../../modules/auth/services/AuthService';
 
 export function LogoutButton() {
   return (
-    <form action={handleSignOut}>
+    <form action={signOutUser}>
       <Button type="submit" variant="outline">
         Logout
       </Button>

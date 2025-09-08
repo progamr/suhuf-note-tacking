@@ -3,10 +3,7 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '../Tabs/Tabs';
-import { Button } from '../Button/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card';
-import { LogoutButton } from '../LogoutButton/LogoutButton';
+import { Button, Tabs, TabsList, TabsTrigger, Card, CardContent, CardHeader, CardTitle, LogoutButton } from '../../../../ui';
 
 export function AuthHome() {
   const searchParams = useSearchParams();

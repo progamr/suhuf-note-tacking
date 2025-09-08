@@ -1,4 +1,4 @@
-import { auth } from './src/infrastructure/auth/auth';
+import { auth } from './src/modules/auth/config/auth.config';
 
 export default auth;
 

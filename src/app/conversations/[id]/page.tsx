@@ -3,7 +3,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { Button } from '../../../ui/components/Button/Button';
 import { Card, CardContent } from '../../../ui/components/Card/Card';
 import { Input } from '../../../ui/components/Input/Input';
-import { auth } from '../../../infrastructure/auth/auth';
+import { auth } from '../../../modules/auth/config/auth.config';
 import { redirect } from 'next/navigation';
 
 export default async function ConversationDetailsPage({

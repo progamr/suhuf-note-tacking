@@ -1,51 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { signIn } from '../../../../infrastructure/auth/auth';
-import { AuthError } from 'next-auth';
-import { z } from 'zod';
-
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+import { loginUser } from '../../../../modules/auth/services/AuthService';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
-    const validatedFields = loginSchema.safeParse(body);
+    const { email, password } = body;
 
-    if (!validatedFields.success) {
-      return NextResponse.json(
-        { error: 'Invalid email or password.' },
-        { status: 400 }
-      );
-    }
-
-    await signIn('credentials', {
-      email: validatedFields.data.email,
-      password: validatedFields.data.password,
-      redirect: false,
-    });
-
+    await loginUser(email, password);
     return NextResponse.json({ success: true });
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return NextResponse.json(
-            { error: 'Invalid credentials.' },
-            { status: 401 }
-          );
-        default:
-          return NextResponse.json(
-            { error: 'Something went wrong.' },
-            { status: 500 }
-          );
-      }
-    }
+    const errorMessage = error instanceof Error ? error.message : 'Something went wrong.';
+    const statusCode = errorMessage === 'Invalid credentials.' ? 401 : 
+                      errorMessage === 'Invalid email or password.' ? 400 : 500;
+    
     return NextResponse.json(
-      { error: 'Something went wrong.' },
-      { status: 500 }
+      { error: errorMessage },
+      { status: statusCode }
     );
   }
 }

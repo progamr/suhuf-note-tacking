@@ -1,4 +1,4 @@
-import { auth } from '../../infrastructure/auth/auth';
+import { auth } from '../../modules/auth/config/auth.config';
 import { redirect } from 'next/navigation';
 import { Button } from '../../ui/components/Button/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../ui/components/Card/Card';
