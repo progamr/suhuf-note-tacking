@@ -10,6 +10,7 @@
     "init-db": "node --require ts-node/register src/infrastructure/database/scripts/init-db.ts"
   },
   "dependencies": {
+    "@auth/core": "^0.40.0",
     "@hookform/resolvers": "^5.2.1",
     "@langchain/openai": "^0.6.11",
     "@mikro-orm/cli": "^6.5.2",
@@ -19,11 +20,14 @@
     "@mikro-orm/reflection": "^6.5.2",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "langchain": "^0.3.33",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
+    "next-auth": "^5.0.0-beta.29",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",

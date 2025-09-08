@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
-import { Button } from '@/ui/components/Button/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/components/Card/Card';
-import { Tabs, TabsList, TabsTrigger } from '@/ui/components/Tabs/Tabs';
+import { Tabs, TabsList, TabsTrigger } from '../Tabs/Tabs';
+import { Button } from '../Button/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card';
+import { LogoutButton } from '../LogoutButton/LogoutButton';
 
 export function AuthHome() {
   const searchParams = useSearchParams();
@@ -19,8 +20,10 @@ export function AuthHome() {
             Suhuf
           </Link>
           <div className="flex items-center gap-4">
+            <Link href="/settings" className="font-bold font-sketch hover:underline">Settings</Link>
             <div className="w-10 h-10 bg-muted rounded-full border-2 border-foreground"></div>
             <span className="font-bold font-sketch">User</span>
+            <LogoutButton />
           </div>
         </div>
       </header>

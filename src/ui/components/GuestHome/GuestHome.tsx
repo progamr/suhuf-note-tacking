@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Button } from '@/ui/components/Button/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/components/Card/Card';
+import { Button } from '../Button/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card';
 
 export function GuestHome() {
   return (
