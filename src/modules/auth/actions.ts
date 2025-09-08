@@ -5,45 +5,11 @@ import { AuthError } from 'next-auth';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
-
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
-
-export async function authenticate(prevState: string | undefined, formData: FormData) {
-  try {
-    const validatedFields = loginSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    });
-
-    if (!validatedFields.success) {
-      return 'Invalid email or password.';
-    }
-
-    await signIn('credentials', {
-      email: validatedFields.data.email,
-      password: validatedFields.data.password,
-      redirectTo: '/',
-    });
-  } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case 'CredentialsSignin':
-          return 'Invalid credentials.';
-        default:
-          return 'Something went wrong.';
-      }
-    }
-    throw error;
-  }
-}
 
 export async function createUser(prevState: string | undefined, formData: FormData) {
   try {
