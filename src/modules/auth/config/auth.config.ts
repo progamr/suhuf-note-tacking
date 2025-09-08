@@ -19,13 +19,13 @@ const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials) {
+        console.log('credentials DEBUGGING', credentials);
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
         
         return await validateUserCredentials(
-          credentials.email as string,
-          credentials.password as string
+          credentials as any
         );
       },
     }),

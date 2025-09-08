@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { Button } from '../Button/Button';
-import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card';
+import { Button } from '../../../../ui';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../ui';
 
 export function GuestHome() {
   return (
