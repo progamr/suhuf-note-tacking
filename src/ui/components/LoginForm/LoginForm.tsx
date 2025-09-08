@@ -1,24 +1,49 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '../Button/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card';
 import { Input } from '../Input/Input';
-import { authenticate } from '../../../modules/auth/actions';
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? 'Signing in...' : 'Login'}
-    </Button>
-  );
-}
 
 export function LoginForm() {
-  const [errorMessage, dispatch] = useFormState(authenticate, undefined);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>();
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMessage(undefined);
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        router.push('/');
+        router.refresh();
+      } else {
+        setErrorMessage(data.error || 'Login failed');
+      }
+    } catch (error) {
+      setErrorMessage('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="container mx-auto py-12">
@@ -27,30 +52,29 @@ export function LoginForm() {
           <CardTitle className="text-center">Login</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={dispatch} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-bold mb-1 font-sketch">
+              <label htmlFor="email" className="block text-sm font-bold mb-2">
                 Email
               </label>
-              <Input 
-                id="email" 
+              <Input
+                id="email"
                 name="email"
-                type="email" 
-                placeholder="your@email.com"
+                type="email"
+                placeholder="Enter your email"
                 required
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-bold mb-1 font-sketch">
+              <label htmlFor="password" className="block text-sm font-bold mb-2">
                 Password
               </label>
-              <Input 
-                id="password" 
+              <Input
+                id="password"
                 name="password"
-                type="password" 
-                placeholder="••••••••"
+                type="password"
+                placeholder="Enter your password"
                 required
-                minLength={6}
               />
             </div>
             {errorMessage && (
@@ -58,7 +82,9 @@ export function LoginForm() {
                 {errorMessage}
               </div>
             )}
-            <SubmitButton />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Login'}
+            </Button>
           </form>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}
