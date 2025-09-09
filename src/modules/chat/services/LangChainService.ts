@@ -14,7 +14,7 @@ export class LangChainService {
     this.llm = new ChatGoogleGenerativeAI({
       model: 'gemini-1.5-flash',
       temperature: 0.7,
-      apiKey: 'AIzaSyBMaR4a2chRnZ2e8gV63k6CE1sfoWUbyrA',
+      apiKey: process.env.GOOGLE_API_KEY,
     });
   }
 
