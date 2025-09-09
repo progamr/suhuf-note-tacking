@@ -47,8 +47,14 @@ export class LangChainService {
     return memory;
   }
 
-  async processMessage(conversationId: string, userMessage: string): Promise<string> {
+  async processMessage(conversationId: string, userMessage: string): Promise<{ response: string; shouldSaveAsNote?: { title: string; content: string } }> {
     const memory = await this.getOrCreateMemory(conversationId);
+    
+    console.log('🚀 Processing message:', userMessage);
+    
+    // Check if user wants to save something as a note
+    const noteIntent = await this.detectNoteIntent(userMessage);
+    console.log('🔍 Note intent result:', noteIntent);
     
     const chain = new ConversationChain({
       llm: this.llm,
@@ -64,7 +70,19 @@ export class LangChainService {
     // Save both messages to database
     await this.saveMessages(conversationId, userMessage, response.response);
 
-    return response.response;
+    const result: { response: string; shouldSaveAsNote?: { title: string; content: string } } = {
+      response: response.response
+    };
+
+    if (noteIntent) {
+      result.shouldSaveAsNote = noteIntent;
+      console.log('✅ Adding note intent to result:', noteIntent);
+    } else {
+      console.log('❌ No note intent to add to result');
+    }
+
+    console.log('📤 Final result:', { hasNote: !!result.shouldSaveAsNote, response: result.response.substring(0, 100) });
+    return result;
   }
 
   private async saveMessages(conversationId: string, userMessage: string, aiResponse: string): Promise<void> {
@@ -155,6 +173,62 @@ export class LangChainService {
     } catch (error) {
       console.error('Error loading messages:', error);
       return [];
+    }
+  }
+
+  async detectNoteIntent(userMessage: string): Promise<{ title: string; content: string } | null> {
+    try {
+      const prompt = `Analyze this user message and determine if they want to save something as a note. Look for phrases like "save this as a note", "remember this", "take a note", "write this down", "Save this as a note", etc.
+
+User message: "${userMessage}"
+
+If they want to save something as a note, respond with JSON in this format:
+{
+  "isNote": true,
+  "title": "Brief title (max 50 chars)",
+  "content": "The content they want to save"
+}
+
+If they don't want to save anything as a note, respond with:
+{
+  "isNote": false
+}
+
+Only respond with valid JSON, nothing else.`;
+
+      console.log('🔍 Note Detection - User Message:', userMessage);
+      
+      const response = await this.llm.invoke([
+        { role: 'user', content: prompt }
+      ]);
+
+      const responseText = response.content.toString().trim();
+      console.log('🤖 Note Detection - AI Response:', responseText);
+      
+      // Extract JSON from markdown code blocks if present
+      let jsonText = responseText;
+      const jsonMatch = responseText.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim();
+        console.log('📋 Extracted JSON from markdown:', jsonText);
+      }
+      
+      const result = JSON.parse(jsonText);
+      console.log('📝 Note Detection - Parsed Result:', result);
+      
+      if (result.isNote && result.title && result.content) {
+        console.log('✅ Note Intent Detected:', { title: result.title, content: result.content });
+        return {
+          title: result.title,
+          content: result.content
+        };
+      }
+
+      console.log('❌ No Note Intent Detected');
+      return null;
+    } catch (error) {
+      console.error('💥 Error detecting note intent:', error);
+      return null;
     }
   }
 

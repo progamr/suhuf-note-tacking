@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '../../../ui';
+import { Button, Card, CardContent, CardHeader, CardTitle } from '../../../ui';
+import { toast } from 'react-toastify';
 
 interface NewChatDialogProps {
   isOpen: boolean;
@@ -35,6 +36,23 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
       }
 
       const data = await response.json();
+      console.log('🔍 API Response:', data);
+      
+      // Show success toast if note was saved
+      if (data.conversation.noteSaved) {
+        console.log('📢 Showing toast notification for saved note');
+        toast.success('Note saved automatically!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Wait a moment for toast to render before navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       
       // Navigate to the new conversation
       router.push(`/conversations/${data.conversation.id}`);
@@ -59,13 +77,14 @@ export function NewChatDialog({ isOpen, onClose }: NewChatDialogProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Input
-                type="text"
+              <textarea
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                 placeholder="Type your first message..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 disabled={isLoading}
                 autoFocus
+                rows={4}
               />
             </div>
             <div className="flex justify-end gap-2">

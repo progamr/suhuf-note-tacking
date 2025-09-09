@@ -43,6 +43,31 @@ export async function POST(request: NextRequest) {
     // Process first message and get AI response
     const aiResponse = await langChainService.processMessage(conversation.id, firstMessage);
 
+    // Handle note saving if detected
+    let noteSaved = false;
+    console.log('🔍 Checking for note intent in aiResponse:', aiResponse);
+    if (aiResponse.shouldSaveAsNote) {
+      try {
+        console.log('💾 Attempting to save note:', aiResponse.shouldSaveAsNote);
+        const { NoteService } = await import('../../../../modules/notes/services/NoteService');
+        const noteService = new NoteService(em);
+        
+        const savedNote = await noteService.createNote(
+          userId,
+          aiResponse.shouldSaveAsNote.title,
+          aiResponse.shouldSaveAsNote.content,
+          conversation.id
+        );
+        
+        noteSaved = true;
+        console.log('✅ Note saved successfully:', savedNote);
+      } catch (error) {
+        console.error('💥 Error saving note:', error);
+      }
+    } else {
+      console.log('❌ No note intent detected in aiResponse');
+    }
+
     console.log('AI Response, DEBUG',aiResponse);
     return NextResponse.json({
       success: true,
@@ -50,7 +75,8 @@ export async function POST(request: NextRequest) {
         id: conversation.id,
         title: conversation.title,
         firstMessage,
-        aiResponse
+        aiResponse: aiResponse.response,
+        noteSaved
       }
     });
 

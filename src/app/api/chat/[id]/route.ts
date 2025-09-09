@@ -25,11 +25,37 @@ export async function POST(
     const langChainService = new LangChainService(em);
 
     // Process message through LangChain for context management and get AI response
-    const aiResponse = await langChainService.processMessage(conversationId, message);
+    const result = await langChainService.processMessage(conversationId, message);
+
+    // Handle note saving if detected
+    let noteSaved = false;
+    console.log('🔍 Chat API - Checking for note intent in result:', result);
+    if (result.shouldSaveAsNote) {
+      try {
+        console.log('💾 Chat API - Attempting to save note:', result.shouldSaveAsNote);
+        const { NoteService } = await import('../../../../modules/notes/services/NoteService');
+        const noteService = new NoteService(em);
+        
+        const savedNote = await noteService.createNote(
+          parseInt(session.user.id || '2'),
+          result.shouldSaveAsNote.title,
+          result.shouldSaveAsNote.content,
+          conversationId
+        );
+        
+        noteSaved = true;
+        console.log('✅ Chat API - Note saved successfully:', savedNote);
+      } catch (error) {
+        console.error('💥 Chat API - Error saving note:', error);
+      }
+    } else {
+      console.log('❌ Chat API - No note intent detected in result');
+    }
 
     return NextResponse.json({
       success: true,
-      response: aiResponse
+      response: result.response,
+      noteSaved: noteSaved
     });
 
   } catch (error) {

@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { PlusCircle } from 'lucide-react';
-import { Button, Tabs, TabsList, TabsTrigger, Card, CardContent, CardHeader, CardTitle, LogoutButton } from '../../../../ui';
+import { Tabs, TabsList, TabsTrigger, LogoutButton } from '../../../../ui';
 import { ConversationsClient } from './ConversationsClient';
+import { NotesClient } from '../../../notes/components/NotesClient';
 
 export async function AuthHome({ tab = 'conversations' }: { tab?: string }) {
 
@@ -33,48 +33,8 @@ export async function AuthHome({ tab = 'conversations' }: { tab?: string }) {
         </Tabs>
       </div>
       <main className="flex-1 container mx-auto pb-4">
-        {tab === 'conversations' ? <ConversationsClient /> : <NotesTab />}
+        {tab === 'conversations' ? <ConversationsClient /> : <NotesClient />}
       </main>
-    </div>
-  );
-}
-
-
-
-function NotesTab() {
-  const notes = [
-    { id: '1', title: 'System req for new project', content: 'Low-latency, high throughput...', time: '2d' },
-    { id: '2', title: 'Daily habits (list)', content: 'Morning routine, exercise, reading...', time: '1w' },
-    { id: '3', title: 'Do the deployment of...', content: 'Steps to deploy the application...', time: '3w' },
-  ];
-
-  return (
-    <div>
-      <div className="flex justify-end mb-6">
-        <Button asChild>
-          <Link href="/notes/new" className="flex items-center gap-2">
-            <PlusCircle size={18} />
-            <span>New Note</span>
-          </Link>
-        </Button>
-      </div>
-      <div className="space-y-4">
-        {notes.map(note => (
-          <Link key={note.id} href={`/notes/${note.id}`}>
-            <Card className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle>{note.title}</CardTitle>
-                  <span className="text-sm text-muted-foreground font-sans">{note.time}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground font-sans truncate">{note.content}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }
