@@ -6,7 +6,7 @@ export class ConversationRepository extends EntityRepository<Conversation> {
     return this.find({ user: { id: userId } }, { orderBy: { createdAt: 'DESC' } });
   }
   
-  async findWithMessages(id: number): Promise<Conversation | null> {
+  async findWithMessages(id: string): Promise<Conversation | null> {
     return this.findOne(id, {
       populate: ['messages']
     });

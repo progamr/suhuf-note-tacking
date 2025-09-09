@@ -3,10 +3,15 @@ import { auth } from '../../../../modules/auth/config/auth.config';
 import { DI } from '../../../../infrastructure/database/di';
 import { ConversationService } from '../../../../modules/conversations/services/ConversationService';
 import { LangChainService } from '../../../../modules/chat/services/LangChainService';
+import { NoteService } from '../../../../modules/notes/services/NoteService';
+import { NotesRepository } from '../../../../modules/notes/repositories/NotesRepository';
+import { Note } from '../../../../infrastructure/database/entities/Note';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
+    const em = await DI.getEntityManager();
+    const notesRepository = new NotesRepository(em, Note);
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'First message is required' }, { status: 400 });
     }
 
-    const em = await DI.getEntityManager();
     const conversationService = new ConversationService(em);
     const langChainService = new LangChainService(em);
 
@@ -49,9 +53,7 @@ export async function POST(request: NextRequest) {
     if (aiResponse.shouldSaveAsNote) {
       try {
         console.log('💾 Attempting to save note:', aiResponse.shouldSaveAsNote);
-        const { NoteService } = await import('../../../../modules/notes/services/NoteService');
-        const noteService = new NoteService(em);
-        
+        const noteService = new NoteService(notesRepository);
         const savedNote = await noteService.createNote(
           userId,
           aiResponse.shouldSaveAsNote.title,

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../../modules/auth/config/auth.config';
 import { DI } from '../../../../infrastructure/database/di';
 import { LangChainService } from '../../../../modules/chat/services/LangChainService';
+import { NoteService } from '../../../../modules/notes/services/NoteService';
+import { NotesRepository } from '../../../../modules/notes/repositories/NotesRepository';
+import { Note } from '../../../../infrastructure/database/entities/Note';
 
 export async function POST(
   request: NextRequest,
@@ -9,6 +12,8 @@ export async function POST(
 ) {
   try {
     const session = await auth();
+    const em = await DI.getEntityManager();
+    const notesRepository = new NotesRepository(em, Note);
     
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -21,8 +26,9 @@ export async function POST(
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
-    const em = await DI.getEntityManager();
+    
     const langChainService = new LangChainService(em);
+    const noteService = new NoteService(notesRepository);
 
     // Process message through LangChain for context management and get AI response
     const result = await langChainService.processMessage(conversationId, message);
@@ -33,9 +39,6 @@ export async function POST(
     if (result.shouldSaveAsNote) {
       try {
         console.log('💾 Chat API - Attempting to save note:', result.shouldSaveAsNote);
-        const { NoteService } = await import('../../../../modules/notes/services/NoteService');
-        const noteService = new NoteService(em);
-        
         const savedNote = await noteService.createNote(
           parseInt(session.user.id || '2'),
           result.shouldSaveAsNote.title,

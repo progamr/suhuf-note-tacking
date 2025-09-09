@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../modules/auth/config/auth.config';
 import { DI } from '../../../infrastructure/database/di';
 import { NoteService } from '../../../modules/notes/services/NoteService';
+import { NotesRepository } from '../../../modules/notes/repositories/NotesRepository';
+import { Note } from '../../../infrastructure/database/entities/Note';
 import { z } from 'zod';
 
 const createNoteSchema = z.object({
@@ -13,17 +15,18 @@ const createNoteSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const em = await DI.getEntityManager();
+    const notesRepository = new NotesRepository(em, Note);
+    const noteService = new NoteService(notesRepository);
+    
     const body = await request.json();
     const validatedData = createNoteSchema.parse(body);
     
     const userId = parseInt(session.user.id || '2');
-    const em = await DI.getEntityManager();
-    const noteService = new NoteService(em);
     
     const note = await noteService.createNote(
       userId,
@@ -47,16 +50,17 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const session = await auth();
-    
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = parseInt(session.user.id || '2');
     const em = await DI.getEntityManager();
-    const noteService = new NoteService(em);
+    const notesRepository = new NotesRepository(em, Note);
+    const noteService = new NoteService(notesRepository);
     
-    const notes = await noteService.getUserNotes(userId);
+    const userId = parseInt(session.user.id || '2');
+   
+    const notes = await noteService.getNotesByUserId(userId);
     
     return NextResponse.json(notes);
   } catch (error) {

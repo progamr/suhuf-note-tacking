@@ -1,90 +1,32 @@
-import { EntityManager } from '@mikro-orm/core';
-import { Note } from '../../../infrastructure/database/entities/Note';
+import { NoteDto } from '../../../shared/dtos';
+import { NotesRepository } from '../repositories/NotesRepository';
 
 export class NoteService {
-  constructor(private em: EntityManager) {}
+  constructor(private notesRepository: NotesRepository) {}
 
   async createNote(userId: number, title: string, content: string, conversationId?: string) {
-    const note = new Note();
-    note.user = userId as unknown;
-    note.title = title;
-    note.content = content;
+    const savedNote = await this.notesRepository.createNote(userId, title, content, conversationId);
     
-    if (conversationId) {
-      note.conversation = conversationId as unknown;
-    }
-
-    await this.em.persistAndFlush(note);
-    
-    return {
-      id: note.id,
-      title: note.title,
-      content: note.content,
-      createdAt: note.createdAt,
-      updatedAt: note.updatedAt,
-    };
+    return savedNote;
   }
 
-  async getUserNotes(userId: number) {
-    const notes = await this.em.find(Note, { user: { id: userId } }, {
-      orderBy: { createdAt: 'DESC' }
-    });
-    
-    return notes.map(note => ({
-      id: note.id,
-      title: note.title,
-      content: note.content,
-      createdAt: note.createdAt.toISOString(),
-      updatedAt: note.updatedAt.toISOString(),
-    }));
+  async getNotesByUserId(userId: number): Promise<NoteDto[] | null> {
+    return await this.notesRepository.findAllByUserId(userId);
   }
 
-  async getNote(noteId: number) {
-    const note = await this.em.findOne(Note, { id: noteId });
+  async getNote(noteId: number): Promise<NoteDto | null> {
+    const note = await this.notesRepository.findById(noteId);
     
-    if (!note) {
-      return null;
-    }
-
-    return {
-      id: note.id,
-      title: note.title,
-      content: note.content,
-      createdAt: note.createdAt.toISOString(),
-      updatedAt: note.updatedAt.toISOString(),
-    };
+    return note;
   }
 
-  async updateNote(noteId: number, title: string, content: string) {
-    const note = await this.em.findOne(Note, { id: noteId });
+  async updateNote(noteId: number, title: string, content: string): Promise<NoteDto | null> {
+    const updatedNote = await this.notesRepository.updateNote(noteId, title, content);
     
-    if (!note) {
-      return null;
-    }
-
-    note.title = title;
-    note.content = content;
-    note.updatedAt = new Date();
-
-    await this.em.persistAndFlush(note);
-    
-    return {
-      id: note.id,
-      title: note.title,
-      content: note.content,
-      createdAt: note.createdAt.toISOString(),
-      updatedAt: note.updatedAt.toISOString(),
-    };
+    return updatedNote;
   }
 
-  async deleteNote(noteId: number) {
-    const note = await this.em.findOne(Note, { id: noteId });
-    
-    if (!note) {
-      return false;
-    }
-
-    await this.em.removeAndFlush(note);
-    return true;
+  async deleteNote(noteId: number): Promise<boolean> {
+    return await this.notesRepository.deleteNote(noteId);
   }
 }

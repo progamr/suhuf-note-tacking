@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { auth } from '../../../../modules/auth/config/auth.config';
 import { DI } from '../../../../infrastructure/database/di';
 import { NoteService } from '../../../../modules/notes/services/NoteService';
-import { z } from 'zod';
+import { NotesRepository } from '../../../../modules/notes/repositories/NotesRepository';
+import { Note } from '../../../../infrastructure/database/entities';
 
 const updateNoteSchema = z.object({
   title: z.string().min(1),
@@ -15,14 +17,15 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const noteId = parseInt(params.id);
     const em = await DI.getEntityManager();
-    const noteService = new NoteService(em);
+    const notesRepository = new NotesRepository(em, Note);
+    const noteService = new NoteService(notesRepository);
+       
+    const noteId = parseInt(params.id);
     
     const note = await noteService.getNote(noteId);
     
@@ -43,18 +46,18 @@ export async function PUT(
 ) {
   try {
     const session = await auth();
-    
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const em = await DI.getEntityManager();
+    const notesRepository = new NotesRepository(em, Note);
+    const noteService = new NoteService(notesRepository);
+    
     const body = await request.json();
     const validatedData = updateNoteSchema.parse(body);
     
     const noteId = parseInt(params.id);
-    const em = await DI.getEntityManager();
-    const noteService = new NoteService(em);
-    
     const note = await noteService.updateNote(
       noteId,
       validatedData.title,
@@ -88,10 +91,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const noteId = parseInt(params.id);
     const em = await DI.getEntityManager();
-    const noteService = new NoteService(em);
+    const notesRepository = new NotesRepository(em, Note);
+    const noteService = new NoteService(notesRepository);
     
+    const noteId = parseInt(params.id);    
     const deleted = await noteService.deleteNote(noteId);
     
     if (!deleted) {
