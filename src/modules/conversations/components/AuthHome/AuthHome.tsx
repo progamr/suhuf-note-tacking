@@ -1,13 +1,9 @@
-'use client';
-
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { PlusCircle } from 'lucide-react';
 import { Button, Tabs, TabsList, TabsTrigger, Card, CardContent, CardHeader, CardTitle, LogoutButton } from '../../../../ui';
+import { ConversationsClient } from './ConversationsClient';
 
-export function AuthHome() {
-  const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || 'conversations';
+export async function AuthHome({ tab = 'conversations' }: { tab?: string }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -37,48 +33,13 @@ export function AuthHome() {
         </Tabs>
       </div>
       <main className="flex-1 container mx-auto pb-4">
-        {tab === 'conversations' ? <ConversationsTab /> : <NotesTab />}
+        {tab === 'conversations' ? <ConversationsClient /> : <NotesTab />}
       </main>
     </div>
   );
 }
 
-function ConversationsTab() {
-  const conversations = [
-    { id: '1', title: 'How to setup Docker on Mac', lastMessage: 'First download docker from official site...', time: '2h' },
-    { id: '2', title: 'Creating a basic Go API', lastMessage: 'Let\'s start by setting up the project structure...', time: '3d' },
-  ];
 
-  return (
-    <div>
-      <div className="flex justify-end mb-6">
-        <Button asChild>
-          <Link href="/conversations/new" className="flex items-center gap-2">
-            <PlusCircle size={18} />
-            <span>New Conversation</span>
-          </Link>
-        </Button>
-      </div>
-      <div className="space-y-4">
-        {conversations.map(conversation => (
-          <Link key={conversation.id} href={`/conversations/${conversation.id}`}>
-            <Card className="hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle>{conversation.title}</CardTitle>
-                  <span className="text-sm text-muted-foreground font-sans">{conversation.time}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground font-sans truncate">{conversation.lastMessage}</p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function NotesTab() {
   const notes = [

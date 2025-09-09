@@ -1,11 +1,11 @@
 import { Entity, PrimaryKey, Property, ManyToOne, OneToMany } from '@mikro-orm/core';
-import { Message } from './Message';
+import { v4 as uuidv4 } from 'uuid';
 import '../reflect-metadata';
 
 @Entity({ tableName: 'conversations' })
 export class Conversation {
   @PrimaryKey()
-  id!: number;
+  id: string = uuidv4();
 
   @ManyToOne('User')
   user!: unknown;
@@ -13,8 +13,8 @@ export class Conversation {
   @Property()
   title!: string;
 
-  @OneToMany({ entity: () => Message, mappedBy: 'conversation' })
-  messages!: Message[];
+  @OneToMany('Message', 'conversation')
+  messages!: unknown[];
 
   @OneToMany('Note', 'conversation')
   notes!: unknown[];

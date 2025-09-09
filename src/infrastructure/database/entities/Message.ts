@@ -1,12 +1,12 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
 import '../reflect-metadata';
 
-@Entity({ collection: 'messages' })
+@Entity({ tableName: 'messages' })
 export class Message {
   @PrimaryKey()
   id!: number;
 
-  @ManyToOne('Conversation')
+  @ManyToOne('Conversation', { fieldName: 'conversation_id' })
   conversation!: unknown;
 
   @Property()

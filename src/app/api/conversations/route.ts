@@ -33,8 +33,15 @@ export async function POST(req: NextRequest) {
 
 export async function GET() {
   try {
-    // For demo purposes, we'll use a mock user ID
-    const userId = 1;
+    const { auth } = await import('../../../modules/auth/config/auth.config');
+    const session = await auth();
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // TODO: Fix user ID issue - using mock user ID for now
+    const userId = parseInt(session.user.id || '2');
     
     const em = await DI.getEntityManager();
     const conversationService = new ConversationService(em);

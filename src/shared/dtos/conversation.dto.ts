@@ -5,7 +5,7 @@ export type CreateConversationDto = z.infer<typeof createConversationSchema>;
 export type UpdateConversationDto = z.infer<typeof updateConversationSchema>;
 
 export interface ConversationDto {
-  id: number;
+  id: string;
   title: string;
   createdAt: string;
   updatedAt: string;

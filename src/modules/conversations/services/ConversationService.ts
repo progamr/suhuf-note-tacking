@@ -7,7 +7,7 @@ export class ConversationService {
   constructor(private readonly em: EntityManager) {}
 
   async createConversation(userId: number, dto: CreateConversationDto): Promise<ConversationDto> {
-    const user = await this.em.findOne(User, userId);
+    const user = await this.em.findOne(User, 2);
     
     if (!user) {
       throw new Error('User not found');
@@ -36,6 +36,8 @@ export class ConversationService {
     const conversations = await this.em.find(Conversation, { user: { id: userId } }, {
       orderBy: { createdAt: 'DESC' }
     });
+
+    console.log('conversationszzzz', conversations);
     
     return conversations.map(conversation => ({
       id: conversation.id,
@@ -45,8 +47,10 @@ export class ConversationService {
     }));
   }
 
-  async getConversation(id: number): Promise<ConversationDto | null> {
-    const conversation = await this.em.findOne(Conversation, id);
+  async getConversation(id: string): Promise<ConversationDto | null> {
+    const conversation = await this.em.findOne(Conversation, id, {
+      populate: ['messages']
+    });
     
     if (!conversation) {
       return null;
