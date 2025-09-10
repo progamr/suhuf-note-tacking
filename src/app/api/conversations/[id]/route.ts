@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../../modules/auth/config/auth.config';
 import { DI } from '../../../../infrastructure/database/di';
 import { ConversationService } from '../../../../modules/conversations/services/ConversationService';
-import { Message } from '../../../../infrastructure/database/entities/Message';
+import { ConversationRepository } from '../../../../modules/conversations/repositories/ConversationRepository';
+import { Conversation } from '../../../../infrastructure/database/entities/Conversation';
 
 export async function GET(
   request: NextRequest,
@@ -17,49 +18,17 @@ export async function GET(
 
     const conversationId = params.id;
     const em = await DI.getEntityManager();
-    const conversationService = new ConversationService(em);
+    const conversationRepository = new ConversationRepository(em, Conversation);
+    const conversationService = new ConversationService(conversationRepository);
     
-    // Get conversation details
-    const conversation = await conversationService.getConversation(conversationId);
+    // Get conversation with messages
+    const conversationWithMessages = await conversationService.getConversationWithMessages(conversationId);
     
-    if (!conversation) {
+    if (!conversationWithMessages) {
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    // Fetch messages for this conversation
-    const messages = await em.find(Message, 
-      { conversation: conversationId }, 
-      { orderBy: { createdAt: 'ASC' } }
-    );
-
-    console.log('Raw messages from DB:');
-    messages.forEach((msg, index) => {
-      console.log(`Message ${index + 1}:`, {
-        id: msg.id,
-        role: msg.role,
-        content: msg.content.substring(0, 100) + '...',
-        createdAt: msg.createdAt,
-        conversationId: msg.conversation
-      });
-    });
-
-    // Format messages for frontend
-    const formattedMessages = messages.map((msg) => ({
-      id: msg.id.toString(),
-      role: msg.role,
-      content: msg.content,
-      createdAt: msg.createdAt.toISOString(),
-    }));
-
-    return NextResponse.json({
-      conversation: {
-        id: conversation.id,
-        title: conversation.title,
-        createdAt: conversation.createdAt,
-        updatedAt: conversation.updatedAt,
-      },
-      messages: formattedMessages
-    });
+    return NextResponse.json(conversationWithMessages);
 
   } catch (error) {
     console.error('Error fetching conversation:', error);

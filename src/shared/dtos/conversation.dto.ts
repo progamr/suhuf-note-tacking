@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { createConversationSchema, updateConversationSchema } from '../schemas/conversation.schema';
+import { MessageDto } from './message.dto';
 
 export type CreateConversationDto = z.infer<typeof createConversationSchema>;
 export type UpdateConversationDto = z.infer<typeof updateConversationSchema>;
@@ -11,11 +12,7 @@ export interface ConversationDto {
   updatedAt: string;
 }
 
-export interface ConversationWithMessagesDto extends ConversationDto {
-  messages: {
-    id: number;
-    content: string;
-    role: 'user' | 'assistant';
-    createdAt: string;
-  }[];
+export interface ConversationWithMessagesDto {
+  conversation: ConversationDto;
+  messages: MessageDto[];
 }
