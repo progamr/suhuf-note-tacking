@@ -16,22 +16,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const em = await DI.getEntityManager();
-    const notesRepository = new NotesRepository(em, Note);
-    const conversationRepository = new ConversationRepository(em, Conversation);
-    const conversationService = new ConversationService(conversationRepository);
-    const langChainService = new LangChainService(em);
-
     const body = await request.json();
     const { firstMessage } = body;
 
     if (!firstMessage || typeof firstMessage !== 'string') {
       return NextResponse.json({ error: 'First message is required' }, { status: 400 });
     }
-
-
-    // Generate title from first message
-    const title = await langChainService.generateTitle(firstMessage);
 
     // Create conversation
     console.log('Session, DEBUG',session);
@@ -41,48 +31,22 @@ export async function POST(request: NextRequest) {
     if (isNaN(userId) || userId === 0) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
     }
+
+    const em = await DI.getEntityManager();
+    const notesRepository = new NotesRepository(em, Note);
+    const conversationRepository = new ConversationRepository(em, Conversation);
+    const langChainService = new LangChainService(em);
+    const noteService = new NoteService(notesRepository);
+    const conversationService = new ConversationService(conversationRepository, notesRepository, langChainService, noteService);
     
     const conversation = await conversationService.createConversation(
       userId, 
-      { title }
+      firstMessage
     );
 
-    // Process first message and get AI response
-    const aiResponse = await langChainService.processMessage(conversation.id, firstMessage);
-
-    // Handle note saving if detected
-    let noteSaved = false;
-    console.log('🔍 Checking for note intent in aiResponse:', aiResponse);
-    if (aiResponse.shouldSaveAsNote) {
-      try {
-        console.log('💾 Attempting to save note:', aiResponse.shouldSaveAsNote);
-        const noteService = new NoteService(notesRepository);
-        const savedNote = await noteService.createNote(
-          userId,
-          aiResponse.shouldSaveAsNote.title,
-          aiResponse.shouldSaveAsNote.content,
-          conversation.id
-        );
-        
-        noteSaved = true;
-        console.log('✅ Note saved successfully:', savedNote);
-      } catch (error) {
-        console.error('💥 Error saving note:', error);
-      }
-    } else {
-      console.log('❌ No note intent detected in aiResponse');
-    }
-
-    console.log('AI Response, DEBUG',aiResponse);
     return NextResponse.json({
       success: true,
-      conversation: {
-        id: conversation.id,
-        title: conversation.title,
-        firstMessage,
-        aiResponse: aiResponse.response,
-        noteSaved
-      }
+      conversation
     });
 
   } catch (error) {
